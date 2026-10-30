@@ -1,1 +1,41 @@
-setup
+name: Update Greece Keno data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub scheduled workflows can start late; this is best-effort, not exact timing.
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-greece-keno-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install parser dependencies
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4
+      - name: Fetch and validate public LotoRadar results
+        run: python scripts/update_lotoradar.py
+      - name: Commit updated draw data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add latest.json
+          if git diff --cached --quiet; then
+            echo "No draw data changes."
+          else
+            git commit -m "Update Greece Keno draw data"
+            git push
+          fi
