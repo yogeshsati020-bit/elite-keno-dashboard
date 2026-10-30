@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Greece Keno 20/80 — Elite Dashboard</title>
+<style>
+:root{--bg:#08111f;--panel:#101d30cc;--line:#29405d;--muted:#9db0c8;--txt:#eef5ff;--a:#66d9ef;--b:#a78bfa;--good:#55d6a0;--bad:#ff7d91}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#183451 0,transparent 42%),linear-gradient(145deg,#07101d,#0c1728 55%,#11172b);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:22px 15px 50px}.top{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:clamp(23px,4vw,34px);margin:0;letter-spacing:-.6px}.sub{color:var(--muted);margin-top:4px}.tag{border:1px solid #36506e;border-radius:99px;padding:6px 11px;color:#b8d9ee;background:#10243a}
+.panel{background:linear-gradient(135deg,#14243aee,#0d1a2cee);border:1px solid #29405d;border-radius:18px;padding:17px;box-shadow:0 14px 38px #0005;margin:14px 0;backdrop-filter:blur(14px)}
+h2{font-size:18px;margin:0 0 12px}label{font-size:13px;color:#b8c9dd;display:block;margin-bottom:5px}
+textarea,input,select{background:#081525;color:var(--txt);border:1px solid #35506d;border-radius:10px;padding:10px;width:100%;font:inherit;outline:none}textarea{min-height:180px;resize:vertical;font-family:ui-monospace,monospace;font-size:13px}
+.controls{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px}.btns{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+button{border:0;border-radius:10px;padding:10px 15px;background:linear-gradient(110deg,#2385a7,#6958bf);color:white;font-weight:700;cursor:pointer}button.secondary{background:#203650;border:1px solid #3c5878}button:active{transform:scale(.98)}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{padding:12px;border:1px solid #29405d;border-radius:13px;background:#0a1929}.stat strong{display:block;font-size:23px}.stat span{color:var(--muted);font-size:12px}
+.error{color:#ffabb7}.success{color:#8ae9c0}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px}th,td{padding:9px 10px;text-align:left;border-bottom:1px solid #263d57;vertical-align:top}th{color:#b8d9ee;background:#10243a;position:sticky;top:0}tr:hover td{background:#14243a}
+.balls{display:flex;flex-wrap:wrap;gap:4px}.ball{display:inline-grid;place-items:center;min-width:25px;height:25px;padding:0 5px;border-radius:50%;font-size:11px;font-weight:800;color:#07101d;background:hsl(var(--h),75%,70%)}
+.small{font-size:12px;color:var(--muted)}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.hidden{display:none}.pill{display:inline-block;border:1px solid #37516d;border-radius:99px;padding:3px 8px;font-size:11px;color:#b9d9ee}
+@media(max-width:700px){.controls{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,1fr)}.wrap{padding:15px 10px 35px}.panel{padding:13px}}
+@media(max-width:390px){.controls{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div><h1>Greece Keno 20/80</h1><div class="sub">Elite Pro Max · Repeated Combination Analyzer</div></div><span class="tag">LotoRadar companion · Mobile friendly</span></header>
+<section class="panel">
+<h2>1. LotoRadar Data Center</h2>
+<div class="btns"><a href="https://lotoradar.com/en/grecia_kino.html" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;border-radius:10px;padding:10px 15px;background:linear-gradient(110deg,#2385a7,#6958bf);color:white;font-weight:700">Open LotoRadar Greece Keno ↗</a></div>
+<div class="hint">LotoRadar में Draw History कॉपी करें और नीचे Paste करें। यह companion dashboard है: वेबसाइट के live/private data को बिना supported API के सीधे scrape या auto-sync नहीं करता।</div>
+</section>
+<section class="panel" id="autoImportPanel">
+<h2>2. Automatic Import — LotoRadar</h2>
+<div class="controls">
+ <div><label for="importCount">Import Window</label><select id="importCount"><option value="1">Latest Draw</option><option value="50" selected>Last 50 Draws</option><option value="100">Last 100 Draws</option></select></div>
+ <div><label for="autoRefresh">Auto Refresh</label><select id="autoRefresh"><option value="off">Off</option><option value="5">Every 5 minutes</option></select></div>
+</div>
+<div class="btns"><button id="latestImport">Import Latest Draw</button><button class="secondary" id="fetchLoto">Fetch Selected Window</button><button class="secondary" id="openLoto">Open source page</button></div>
+<div id="fetchStatus" class="hint" aria-live="polite">Ready. Click “Import Latest Draw” to request the newest published draw. If LotoRadar blocks browser access (CORS) or does not expose the row in its page HTML, use the manual paste box below.</div>
+<div class="hint">Source: LotoRadar public Greece Kino page. This dashboard does not use an undocumented/private API. Automatic import depends on the source allowing browser access; no data is fabricated. Imported rows are validated before analysis. Times are kept as displayed by the source and may use Romanian time.</div>
+</section>
+<section class="panel">
+<h2>3. Draw Data Paste करें</h2>
+<textarea id="data" placeholder="LotoRadar format:
+GREECE KENO 20/80 — 30.10.2026
+1. 16:10 — 4, 8, 15, ...
+
+या DRAW_ID | YYYY-MM-DD HH:MM | 20 numbers
+
+उदाहरण:
+G12345 | 2026-10-30 10:00 | 1, 4, 8, 12, 15, 19, 22, 26, 30, 34, 38, 41, 45, 49, 53, 57, 62, 66, 72, 79"></textarea>
+<div class="hint">LotoRadar format समर्थित: पहले GREECE KENO 20/80 — DD.MM.YYYY date header, फिर 1. 16:10 — 20 numbers वाली rows। पुराना ID | YYYY-MM-DD HH:MM | numbers format भी चलेगा। हर draw में ठीक 20 अलग numbers (1–80) जरूरी हैं।</div>
+<div class="btns"><button id="analyze">Analyze Data</button><button class="secondary" id="demo">Load Sample Data</button><button class="secondary" id="clear">Clear</button></div>
+<div id="validation" class="hint" aria-live="polite"></div>
+</section>
+<section class="panel">
+<h2>4. Analysis Settings</h2>
+<div class="controls">
+<div><label for="window">Draw Window</label><select id="window"><option>6</option><option>12</option><option>25</option><option selected>50</option><option value="all">All valid draws</option></select></div>
+<div><label for="size">Combination Size</label><select id="size"><option value="2">2-Ball</option><option value="3">3-Ball</option><option value="4" selected>4-Ball</option><option value="5">5-Ball</option><option value="6">6-Ball</option><option value="7">7-Ball</option><option value="8">8-Ball</option></select></div>
+<div><label for="minfreq">Minimum Frequency</label><input id="minfreq" type="number" min="2" max="999" value="2"></div>
+<div><label for="limit">Show Results</label><select id="limit"><option>10</option><option>25</option><option>50</option><option value="all">All repeated</option></select></div>
+</div>
+<div class="btns"><button id="rerun" class="secondary">Apply Settings</button></div>
+<div class="hint">Combinations exact-match हैं: numbers का वही पूरा set अलग-अलग draws में आना चाहिए। एक draw के अंदर एक combination को केवल एक बार गिना जाता है।</div>
+</section>
+<section id="results" class="hidden">
+<div class="panel"><div class="sectionhead"><h2>5. Validation Summary</h2><span id="windowLabel" class="pill"></span></div><div class="stats" id="stats"></div><div id="rejected" class="hint"></div></div>
+<div class="panel"><div class="sectionhead"><h2>6. Repeated Combinations</h2><span class="small" id="resultMeta"></span></div><div class="tablewrap"><table><thead><tr><th>Rank</th><th>Exact Combination</th><th>Frequency</th><th>Draw IDs & timestamps</th><th>Time gaps</th><th>Draw-index gaps</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="panel"><h2>7. Window Comparison — Last 6 / 12 / 25 / 50</h2><div class="tablewrap"><table><thead><tr><th>Window</th><th>Valid draws</th><th>Repeated combinations</th><th>Most frequent count</th><th>Top combination(s)</th></tr></thead><tbody id="compare"></tbody></table></div><div class="hint">Comparison चुने हुए combination size और minimum frequency के अनुसार है।</div></div>
+<div class="panel"><h2>8. Near Matches</h2><div id="near" class="small">—</div><div class="hint">Near match का अर्थ: दो अलग combinations में चुने हुए size से एक number कम/ज्यादा समान हो। यह exact repeat नहीं है।</div></div>
+</section>
+<footer class="small" style="text-align:center;padding:14px">यह historical data analysis tool है। पिछले draws भविष्य के परिणाम की गारंटी या prediction नहीं करते।</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let parsed=[], lastValid=[];
+function parseLines(raw){
+ const lines=raw.split(/\r?\n/), valid=[], rejected=[]; let activeDate='';
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i].trim(); if(!line) continue;
+  const dateHead=line.match(/(?:GREECE\s*KENO\s*20\s*\/\s*80\s*[—-]\s*)?(\d{2}\.\d{2}\.\d{4})/i);
+  if(dateHead && !/^\d+\./.test(line)){activeDate=dateHead[1];continue;}
+  // Supports both ID | YYYY-MM-DD HH:MM | numbers and LotoRadar's 1. HH:MM — numbers.
+  let id, dateText, timeText, tail;
+  const m=line.match(/^([^|]+)\|\s*(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2})?\s*\|\s*(.*?)\s*$/);
+  const lr=line.match(/^(\d+)\.\s*(\d{1,2}:\d{2})\s*[—–-]\s*(.*?)\s*$/);
+  if(m){id=m[1].trim();dateText=m[2];timeText=m[3];tail=m[4];}
+  else if(lr && activeDate){id='LR-'+activeDate.replace(/\./g,'')+'-'+lr[1];dateText=activeDate.split('.').reverse().join('-');timeText=lr[2].padStart(5,'0');tail=lr[3];}
+  else { if(/[0-9]/.test(line) && !/^\d+$/.test(line)) rejected.push(`Line ${i+1}: date header missing or unsupported row format`); continue; }
+  const stamp=dateText+' '+timeText;
+  // Accept delimited values (comma/space/newline) or compact 40-digit
+  // strings such as 041218... where each ball is zero-padded to 2 digits.
+  let nums=[];
+  const compact=tail.replace(/\s/g,'');
+  if (/^\d{40}$/.test(compact)) {
+    nums=compact.match(/.{2}/g).map(Number);
+  } else {
+    nums=tail.match(/\d+/g)?.map(Number)||[];
+  }
+  const date=new Date(dateText+'T'+timeText+':00');
+  let reason='';
+  if(!id) reason='Draw ID missing';
+  else if(!Number.isFinite(date.getTime()) || date.toISOString().slice(0,16)!==dateText+'T'+timeText) reason='Invalid date/time';
+  else if(nums.length!==20) reason=`Expected 20 numbers; found ${nums.length}`;
+  else if(nums.some(n=>n<1||n>80)) reason='Number outside 1–80';
+  else if(new Set(nums).size!==20) reason='Duplicate number(s) in draw';
+  else if(valid.some(d=>d.id===id)) reason='Duplicate Draw ID';
+  if(reason) rejected.push(`Line ${i+1} (${id||'unknown'}): ${reason}`);
+  else valid.push({id,stamp,ms:date.getTime(),nums:nums.sort((a,b)=>a-b),line:i+1});
+ }
+ // chronological order, stable by original line when timestamps tie
+ valid.sort((a,b)=>a.ms-b.ms||a.line-b.line);
+ return {valid,rejected};
+}
+function chooseWindow(arr,w){return w==='all'?arr:arr.slice(-Number(w));}
+function combos(nums,k){
+ const out=[]; function rec(start,chosen){if(chosen.length===k){out.push(chosen.join('-'));return;}
+  for(let i=start;i<=nums.length-(k-chosen.length);i++)rec(i+1,[...chosen,nums[i]]);
+ }rec(0,[]);return out;
+}
+function analyze(arr,k,min){
+ const map=new Map();
+ arr.forEach((d,idx)=>{for(const key of combos(d.nums,k)){if(!map.has(key))map.set(key,[]);map.get(key).push({draw:d,index:idx});}});
+ return [...map.entries()].filter(([,v])=>v.length>=min).map(([key,occ])=>({key,occ,count:occ.length}))
+ .sort((a,b)=>b.count-a.count||a.key.localeCompare(b.key,undefined,{numeric:true}));
+}
+function ballHTML(key){return `<div class="balls">${key.split('-').map(n=>`<span class="ball" style="--h:${(Number(n)*47)%360}">${n}</span>`).join('')}</div>`;}
+function fmt(ms){return new Date(ms).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});}
+function duration(ms){let mins=Math.round(ms/60000),d=Math.floor(mins/1440),h=Math.floor((mins%1440)/60),m=mins%60;return `${d?d+'d ':''}${h}h ${m}m`;}
+function run(){
+ const {valid,rejected}=parseLines($('data').value); parsed=valid;
+ const w=$('window').value,k=Number($('size').value),min=Math.max(2,Number($('minfreq').value)||2),arr=chooseWindow(valid,w);
+ lastValid=arr;
+ $('results').classList.remove('hidden');
+ $('validation').innerHTML=`<span class="success">Parsed ${valid.length} valid draw(s).</span> ${rejected.length?`<span class="error">${rejected.length} rejected line(s).</span>`:'No rejected lines.'}`;
+ $('windowLabel').textContent=`Selected window: ${arr.length} draws`;
+ $('stats').innerHTML=[['Valid input draws',valid.length],['Analyzed draws',arr.length],['Rejected lines',rejected.length],['Combination size',`${k}-Ball`]].map(x=>`<div class="stat"><strong>${x[1]}</strong><span>${x[0]}</span></div>`).join('');
+ $('rejected').innerHTML=rejected.length?`<details><summary>Rejected lines देखें</summary><ul>${rejected.map(x=>`<li class="error">${esc(x)}</li>`).join('')}</ul></details>`:'';
+ const all=analyze(arr,k,min),limit=$('limit').value==='all'?all.length:Number($('limit').value),shown=all.slice(0,limit);
+ $('resultMeta').textContent=`${all.length} repeated exact combination(s) · showing ${shown.length}`;
+ $('rows').innerHTML=shown.length?shown.map((x,i)=>{
+  const occ=x.occ, gaps=[]; for(let j=1;j<occ.length;j++)gaps.push(duration(occ[j].draw.ms-occ[j-1].draw.ms));
+  const idx=occ.slice(1).map((o,j)=>o.index-occ[j].index);
+  return `<tr><td>${i+1}</td><td>${ballHTML(x.key)}</td><td><b>${x.count}</b></td><td>${occ.map(o=>`<div><b>${esc(o.draw.id)}</b> <span class="small">${fmt(o.draw.ms)}</span></div>`).join('')}</td><td>${gaps.length?gaps.join('<br>'):'—'}</td><td>${idx.length?idx.join(', '):'—'}</td></tr>`;
+ }).join(''):`<tr><td colspan="6">इस window में चुनी गई minimum frequency के अनुसार कोई repeated exact combination नहीं मिला।</td></tr>`;
+ const windows=[6,12,25,50]; $('compare').innerHTML=windows.map(n=>{const a=valid.slice(-n),res=analyze(a,k,min),top=res[0];return `<tr><td>Last ${n}</td><td>${a.length}</td><td>${res.length}</td><td>${top?top.count:'—'}</td><td>${top?ballHTML(top.key):'—'}</td></tr>`}).join('');
+ // Hot / cold number ranking for the selected window
+ const freq=Array.from({length:80},(_,i)=>({n:i+1,c:arr.reduce((sum,d)=>sum+(d.nums.includes(i+1)?1:0),0)}));
+ const hot=[...freq].sort((a,b)=>b.c-a.c||a.n-b.n).slice(0,10), cold=[...freq].sort((a,b)=>a.c-b.c||a.n-b.n).slice(0,10);
+ let hc=document.getElementById('hotcold'); if(!hc){hc=document.createElement('section');hc.className='panel';hc.id='hotcold';document.getElementById('results').appendChild(hc);} hc.innerHTML=`<h2>8. Hot & Cold Numbers — 1 to 80</h2><div class="controls"><div><b>HOT 10</b><div class="balls">${hot.map(x=>`<span class="ball" style="--h:145" title="${x.c} draws">${x.n}</span>`).join('')}</div><div class="small">Draw frequency: ${hot.map(x=>x.c).join(', ')}</div></div><div><b>COLD 10</b><div class="balls">${cold.map(x=>`<span class="ball" style="--h:260" title="${x.c} draws">${x.n}</span>`).join('')}</div><div class="small">Draw frequency: ${cold.map(x=>x.c).join(', ')}</div></div></div><div class="hint">Historical frequency only; hot/cold status does not predict future draws.</div>`;
+ const near=[]; for(let i=0;i<shown.length;i++)for(let j=i+1;j<shown.length;j++){
+  const A=shown[i].key.split('-'),B=shown[j].key.split('-'),common=A.filter(x=>B.includes(x)).length;
+  if(common>=k-1)near.push({a:shown[i],b:shown[j],common});
+ }
+ $('near').innerHTML=near.length?near.slice(0,30).map(x=>`${ballHTML(x.a.key)} <span class="pill">${x.common}/${k} common</span> ${ballHTML(x.b.key)}`).join('<hr style="border-color:#29405d">'):'No near-matches found among displayed results.';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+$('analyze').onclick=run;$('rerun').onclick=()=>{if($('data').value.trim())run();};
+$('clear').onclick=()=>{$('data').value='';$('results').classList.add('hidden');$('validation').textContent='';};
+$('demo').onclick=()=>{
+ const base=new Date('2026-10-30T08:00:00');let lines=[];
+ for(let i=0;i<12;i++){let nums=Array.from({length:20},(_,j)=>((i*7+j*13)%80)+1);nums=[...new Set(nums)];for(let n=1;nums.length<20;n++)if(!nums.includes(n))nums.push(n);nums.sort((a,b)=>a-b);
+ if(i===0||i===5||i===9){nums.splice(0,4,4,12,23,37);}
+ const d=new Date(base.getTime()+i*10*60000),stamp=d.toISOString().slice(0,16).replace('T',' ');
+ lines.push(`G${1000+i} | ${stamp} | ${nums.join(', ')}`);
+ }$('data').value=lines.join('\n');run();
+ };
+
+// LotoRadar import: use the public page only; no private API or proxy.
+const LOTO_URL='https://lotoradar.com/en/grecia_kino.html';
+let refreshTimer=null;
+function validDrawNumbers(text){
+ const nums=(String(text).match(/\d+/g)||[]).map(Number);
+ return nums.length===20 && nums.every(n=>n>=1&&n<=80) && new Set(nums).size===20 ? nums.sort((a,b)=>a-b) : null;
+}
+function addImportedRows(rows,mode){
+ if(!rows.length) throw new Error('Public page opened, but no machine-readable draw rows were found.');
+ const existing=$('data').value.trim();
+ const combined=[...rows,...(existing?['',existing]:[])].join('\n');
+ $('data').value=combined;
+ $('fetchStatus').innerHTML=`<span class="success">Imported ${rows.length} draw(s) from LotoRadar page. Running validation…</span>`;
+ run();
+}
+function parseLotoPage(doc,count){
+ const rows=[]; const seen=new Set();
+ // First, scan visible result/archive table rows. Accept 20-number cells and a date/time/id nearby.
+ for(const tr of doc.querySelectorAll('tr')){
+   const tds=[...tr.querySelectorAll('th,td')].map(x=>x.textContent.trim());
+   const joined=tds.join(' | ');
+   const nums=tds.map(cell=>validDrawNumbers(cell)).find(Boolean) || validDrawNumbers(tds.filter(cell=>/^\s*\d{1,2}(?:[ ,·]+\d{1,2}){19}\s*$/.test(cell)).join(' '));
+   if(!nums) continue;
+   const dateMatch=joined.match(/(20\d{2})[-./](\d{1,2})[-./](\d{1,2})|((\d{1,2})[.\-/](\d{1,2})[.\-/](20\d{2}))/);
+   const timeMatch=joined.match(/\b([01]?\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?\b/);
+   const idMatch=joined.match(/#?(\d{5,})/);
+   if(!dateMatch||!timeMatch) continue;
+   let y,mo,da;
+   if(dateMatch[1]){y=dateMatch[1];mo=dateMatch[2];da=dateMatch[3];}
+   else {da=dateMatch[5];mo=dateMatch[6];y=dateMatch[7];}
+   const stamp=`${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')} ${String(timeMatch[1]).padStart(2,'0')}:${timeMatch[2]}`;
+   const id=idMatch?idMatch[1]:`LR-${stamp.replace(/\D/g,'')}`;
+   const key=id+'|'+nums.join(','); if(seen.has(key)) continue; seen.add(key);
+   rows.push({id,stamp,nums});
+ }
+ // Fallback: parse the page's server-rendered latest-draw banner.
+ if(!rows.length){
+   const text=doc.body.innerText||doc.body.textContent||'';
+   const m=text.match(/Latest draw[^\n:]*?(\d{1,2}:\d{2})[^:]*:\s*((?:\d{1,2}[,\s·]+){19}\d{1,2})/i);
+   if(m){const nums=validDrawNumbers(m[2]); if(nums){const d=new Date();const date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');rows.push({id:'LR-LATEST-'+date.replace(/\D/g,'')+'-'+m[1].replace(':',''),stamp:date+' '+m[1],nums});}}
+ }
+ rows.sort((a,b)=>a.stamp.localeCompare(b.stamp));
+ return count===1?rows.slice(-1):rows.slice(-count);
+}
+async function fetchLotoRadar(){
+ const status=$('fetchStatus'),count=Number($('importCount').value);
+ status.textContent='Connecting to LotoRadar public page…';
+ try{
+   const res=await fetch(LOTO_URL,{method:'GET',mode:'cors',cache:'no-store',credentials:'omit'});
+   if(!res.ok) throw new Error(`Source returned HTTP ${res.status}`);
+   const html=await res.text();
+   const doc=new DOMParser().parseFromString(html,'text/html');
+   const rows=parseLotoPage(doc,count);
+   addImportedRows(rows,count===1?'latest':`last ${count}`);
+ }catch(err){
+   status.innerHTML=`<span class="error">Automatic browser fetch failed: ${esc(err.message||'CORS/network restriction')}.</span> LotoRadar may block cross-origin requests or render archive rows dynamically. Open the source page, copy its Results Table, and paste it in the Draw Data box; the parser will validate it. No proxy or unofficial API was used.`;
+ }
+}
+$('latestImport').addEventListener('click',()=>{ $('importCount').value='1'; fetchLotoRadar(); });
+$('fetchLoto').addEventListener('click',fetchLotoRadar);
+$('openLoto').addEventListener('click',()=>window.open(LOTO_URL,'_blank','noopener'));
+$('autoRefresh').addEventListener('change',()=>{
+ if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;}
+ if($('autoRefresh').value!=='off'){
+   refreshTimer=setInterval(fetchLotoRadar,300000);
+   $('fetchStatus').textContent='5-minute refresh enabled. The browser must keep this dashboard tab open; source CORS access is still required.';
+ }
+});
+</script></body></html>
