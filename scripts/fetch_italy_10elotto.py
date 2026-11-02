@@ -73,6 +73,10 @@ for draw in old_draws + valid:
         merged[str(draw["id"])] = draw
 
 draws = sorted(merged.values(), key=lambda d: d.get("drawn_at", ""))[-5000:]
+old_sorted = sorted(old_draws, key=lambda d: d.get("drawn_at", ""))[-5000:]
+if draws == old_sorted:
+    print(f"No new or corrected draws. Store remains at {len(draws)} unique draw(s).")
+    raise SystemExit(0)
 result = {
     "source": "Lottevo API (game IT-012)",
     "updated_at": datetime.now(timezone.utc).isoformat(),
