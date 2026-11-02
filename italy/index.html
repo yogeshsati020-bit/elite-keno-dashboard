@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Italy 10eLotto 20/90 Elite Pro Max</title>
+<style>
+:root{color-scheme:dark;--bg:#080d18;--p:#111c2e;--line:#293b56;--muted:#94a6bf;--txt:#eff5ff;--green:#35d49b;--blue:#75aaff;--red:#ff7185}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#182c4c,transparent 38%),var(--bg);color:var(--txt);font:14px system-ui,Arial}main{max-width:1150px;margin:auto;padding:16px}
+header,.panel{background:linear-gradient(145deg,#15233a,#0e1728);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:13px}
+h1{font-size:24px;margin:0}h2{font-size:16px;margin:0 0 12px}.muted{color:var(--muted)}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}.stat{background:#091323;border:1px solid var(--line);border-radius:12px;padding:11px}.stat b{display:block;font-size:21px;color:var(--green)}
+button,select{background:#0a1526;color:var(--txt);border:1px solid #3a506f;border-radius:9px;padding:9px;font:inherit}button{cursor:pointer}.primary{background:#146b52;border-color:#258b6b}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:13px}.balls{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}.ball{background:#0a1526;border:1px solid #334967;border-radius:8px;text-align:center;padding:7px 0;font-weight:700}.hit{background:#155a48;border-color:#2ac891}.hot{outline:1px solid #ff7185}.scroll{overflow:auto;max-height:380px}table{border-collapse:collapse;width:100%;min-width:480px}td,th{text-align:left;padding:8px;border-bottom:1px solid var(--line)}th{color:var(--muted)}.status{padding:10px;background:#091323;border:1px solid var(--line);border-radius:10px;margin-top:12px;color:var(--muted)}.ok{color:var(--green)}.bad{color:var(--red)}.pill{border:1px solid var(--line);padding:4px 8px;border-radius:99px;color:var(--muted);font-size:12px}
+@media(max-width:600px){main{padding:9px}.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:20px}.balls{grid-template-columns:repeat(9,1fr)}}
+</style></head><body><main>
+<header><div class="row" style="justify-content:space-between"><div><h1>ITALY 10eLOTTO 20/90</h1><div class="muted">ELITE PRO MAX · Automatic data sync · Europe/Rome source time · IST display</div></div><span class="pill">Game IT-012</span></div>
+<div class="stats"><div class="stat"><b id="count">0</b><span class="muted">Saved draws</span></div><div class="stat"><b id="latest">—</b><span class="muted">Latest draw (IST)</span></div><div class="stat"><b id="updated">—</b><span class="muted">Data updated</span></div><div class="stat"><b id="fresh">—</b><span class="muted">Feed status</span></div></div>
+<div class="status" id="status">Loading verified draw data…</div>
+<div class="row" style="margin-top:10px"><button class="primary" id="refresh">Refresh data now</button><label class="muted">Window <select id="window"><option>6</option><option>12</option><option>25</option><option selected>50</option><option>100</option><option value="all">All</option></select></label><label class="muted">Combo <select id="size"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>-Ball</label></div></header>
+<div class="grid"><section class="panel"><h2>Numbers 1–90 · latest draw match</h2><div class="balls" id="numberGrid"></div><p class="muted">Green = latest draw · Red outline = top frequency in selected window.</p></section>
+<section class="panel"><h2>Hot / Cold / Overdue</h2><div class="scroll"><table><thead><tr><th>Number</th><th>Frequency</th><th>Draw gap</th></tr></thead><tbody id="rank"></tbody></table></div></section></div>
+<section class="panel"><h2>Repeated combinations</h2><div class="muted" id="comboMeta">Exact combinations repeated in at least 2 different draws.</div><div class="scroll"><table><thead><tr><th>Combination</th><th>Frequency</th><th>Draw times (IST)</th></tr></thead><tbody id="combos"></tbody></table></div></section>
+<section class="panel"><h2>Draw history</h2><div class="scroll"><table><thead><tr><th>Draw time (IST)</th><th>20 numbers</th><th>Source</th></tr></thead><tbody id="history"></tbody></table></div></section>
+<p class="muted">Source records are accepted only for game IT-012 and exactly 20 unique integers from 1 to 90. Historical frequencies are descriptive, not predictions. Automatic server polling runs through GitHub Actions; GitHub may delay scheduled jobs.</p>
+</main>
+<script>
+const DATA_URL='../data/italy-draws.json';let draws=[];
+const $=id=>document.getElementById(id);
+function time(s){return new Date(s).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:true,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function fmt(s){return new Date(s).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:true,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+async function load(){ $('status').textContent='Checking latest published data…';try{
+ const r=await fetch(DATA_URL+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();
+ if(!Array.isArray(j.draws))throw Error('Invalid data file');
+ draws=j.draws.filter(d=>d.lottery_code==='IT-012'&&Array.isArray(d.numbers)&&d.numbers.length===20&&new Set(d.numbers).size===20&&d.numbers.every(n=>Number.isInteger(n)&&n>=1&&n<=90)&&d.drawn_at).sort((a,b)=>a.drawn_at.localeCompare(b.drawn_at));
+ $('count').textContent=draws.length;$('latest').textContent=draws.length?time(draws[draws.length-1].drawn_at):'—';$('updated').textContent=j.updated_at?fmt(j.updated_at):'—';$('fresh').textContent=j.updated_at?'DATA FILE':'WAITING';
+ $('status').innerHTML=draws.length?'<span class="ok">Verified feed loaded.</span> Last browser refresh: '+fmt(new Date().toISOString()):'<span class="bad">No imported draws yet.</span> Add the API key and enable the scheduled workflow first.';
+ render();
+ }catch(e){$('status').innerHTML='<span class="bad">Could not load data file: '+e.message+'</span>';}}
+function choose(){let w=$('window').value;return w==='all'?draws:draws.slice(-Number(w));}
+function render(){const a=choose(),k=Number($('size').value),f=Array(91).fill(0),gap=Array(91).fill(a.length),last=new Set(draws.at(-1)?.numbers||[]);
+ a.forEach((d,i)=>d.numbers.forEach(n=>{f[n]++;gap[n]=a.length-1-i;}));let mx=Math.max(0,...f);
+ $('numberGrid').innerHTML=Array.from({length:90},(_,i)=>{let n=i+1;return '<div class="ball '+(last.has(n)?'hit ':'')+(f[n]===mx&&mx?'hot':'')+'">'+n+'</div>';}).join('');
+ const order=Array.from({length:90},(_,i)=>i+1).sort((x,y)=>f[y]-f[x]||gap[y]-gap[x]||x-y);
+ $('rank').innerHTML=order.slice(0,30).map(n=>'<tr><td>'+n+'</td><td>'+f[n]+'</td><td>'+gap[n]+'</td></tr>').join('');
+ const map=new Map();function gen(nums,start,cur){if(cur.length===k){let key=cur.join('-');map.set(key,(map.get(key)||0)+1);return;}for(let i=start;i<=nums.length-(k-cur.length);i++)gen(nums,i+1,[...cur,nums[i]]);}
+ a.forEach(d=>gen(d.numbers.slice().sort((x,y)=>x-y),0,[]));
+ const repeated=[...map].filter(x=>x[1]>=2).sort((x,y)=>y[1]-x[1]||x[0].localeCompare(y[0],undefined,{numeric:true})).slice(0,100);
+ $('comboMeta').textContent='Last '+a.length+' valid draws · '+k+'-Ball · '+repeated.length+' repeated combinations (min 2 draws)';
+ $('combos').innerHTML=repeated.length?repeated.map(([key,c])=>'<tr><td>'+key.split('-').join(' + ')+'</td><td>'+c+'</td><td>'+a.filter(d=>{let nums=d.numbers.slice().sort((x,y)=>x-y);let chosen=key.split('-').map(Number);return chosen.every(n=>nums.includes(n));}).map(d=>fmt(d.drawn_at)).join('<br>')+'</td></tr>').join(''):'<tr><td colspan="3">No repeated combinations in this window.</td></tr>';
+ $('history').innerHTML=draws.slice().reverse().slice(0,500).map(d=>'<tr><td>'+fmt(d.drawn_at)+'</td><td>'+d.numbers.join(', ')+'</td><td>'+d.source+'</td></tr>').join('');
+}
+$('refresh').onclick=load;$('window').onchange=render;$('size').onchange=render;load();setInterval(load,300000);
+</script></body></html>
